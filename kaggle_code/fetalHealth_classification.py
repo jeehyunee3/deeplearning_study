@@ -16,49 +16,61 @@ import tensorflow as tf
 
 pd.set_option('display.max_columns',None)
 
-#인덱스명 리스트
-idx=['cap-shape','cap-surface','cap-color','bruises','odor','gill-attachment','gill-spacing','gill-size','gill-color',
-     'stalk-shape','stalk-root','stalk-surface-above-ring','stalk-surface-below-ring','stalk-color-above-ring','stalk-color-below-ring',
-     'veil-type', 'veil-color','ring-number','ring-type','spore-print-color','population','habitat']
-
 # seed 값 설정
 seed = 3
 numpy.random.seed(seed)
 tf.random.set_seed(seed)
 
-#데이터 불러오기
-df = pd.read_csv('../dataset/mushrooms.csv')
+#인덱스 리스트
+idx=['baseline value','accelerations','fetal_movement','uterine_contractions','light_decelerations','severe_decelerations',
+     'prolongued_decelerations','abnormal_short_term_variability','mean_value_of_short_term_variability',
+     'percentage_of_time_with_abnormal_long_term_variability','mean_value_of_long_term_variability','histogram_width',
+     'histogram_min','histogram_max','histogram_number_of_peaks','histogram_number_of_zeroes','histogram_mode',
+     'histogram_mean','histogram_median','histogram_variance','histogram_tendency']
+
+# 데이터 입력
+df = pd.read_csv('../dataset/fetal_health.csv')
+df.sample(frac=1)
 
 #데이터 정보 확인
 #print(df.info())
 #print(df.describe())
 
+#히트맵
+#colormap = plt.cm.gist_heat
+#plt.figure(figsize=(25,25))
+#sns.heatmap(df.corr(),linewidths=0.1,vmax=0.5, cmap=colormap, linecolor='white', annot=True)
+#plt.show()
+
 #그래프 히스토그램
 #for i in idx:
-#    grid = sns.FacetGrid(df, col='class')
+#    grid = sns.FacetGrid(df, col='fetal_health')
 #    grid.map(plt.hist, i,  bins=10)
 #    plt.show()
 
 #문자열을 숫자로 변환 후 원핫인코딩
-dataset = pd.get_dummies(df).values
+dataset = df.values
 
-#데이터분류
-X = dataset[:,2:119]
-Y = dataset[:,0:2]
+# 속성/클래스 데이터 분류
+X = dataset[:,0:21]
+Y_obj = dataset[:,21]
 
-#print(dataset[0:5,:])
-#print(dataset.shape)
+# 문자열을 숫자로 변환
+e = LabelEncoder()
+e.fit(Y_obj)
+Y = e.transform(Y_obj)
+Y_encoded = tf.keras.utils.to_categorical(Y)
 
-#테스트셋/학습셋 분류
-X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.3, random_state=seed)
+#print(Y_encoded)
 
-#모델생성
+#테스트셋, 학습셋 데이터 분류
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y_encoded, test_size=0.3, random_state=seed)
+
+# 모델 설정
 model = Sequential()
-model.add(Dense(87,  input_dim=117, activation='relu'))
-model.add(Dense(43, activation='relu'))
-model.add(Dense(28, activation='relu'))
-model.add(Dense(13, activation='relu'))
-model.add(Dense(2, activation='softmax'))
+model.add(Dense(16, input_dim=21, activation='relu'))
+model.add(Dense(7, activation='relu'))
+model.add(Dense(3, activation='softmax'))
 
 model.compile(loss='categorical_crossentropy',
           optimizer='adam',
@@ -70,7 +82,7 @@ if not os.path.exists(MODEL_DIR):
     os.mkdir(MODEL_DIR)
 
 # 모델 저장 조건 설정
-modelpath="../model/mushrooms-{epoch:02d}-val_accuracy:{val_accuracy:.4f}.hdf5"
+modelpath="../model/fetalHealth-{epoch:02d}-val_accuracy:{val_accuracy:.4f}.hdf5"
 
 # 모델 업데이트 및 저장
 checkpointer = ModelCheckpoint(filepath=modelpath, monitor='val_accuracy', verbose=1, save_best_only=True)
@@ -78,8 +90,8 @@ checkpointer = ModelCheckpoint(filepath=modelpath, monitor='val_accuracy', verbo
 # 학습 자동 중단 설정
 early_stopping_callback = EarlyStopping(monitor='val_accuracy', patience=50)
 
-# 모델 실행 및 저장 #verbose=0, callbacks=[early_stopping_callback,checkpointer]
-history = model.fit(X_train, Y_train, validation_data=(X_test, Y_test), epochs=300, batch_size=10, verbose=0, 
+# 모델 실행 및 저장 # 
+history = model.fit(X_train, Y_train, validation_data=(X_test, Y_test), epochs=300, batch_size=20, verbose=0, 
                     callbacks=[early_stopping_callback,checkpointer])
 
 # 테스트셋 실험 결과의 값을 저장
@@ -106,7 +118,4 @@ plt.grid()
 plt.xlabel('epoch')
 plt.ylabel('acc')
 plt.show()
-
-
-
 
