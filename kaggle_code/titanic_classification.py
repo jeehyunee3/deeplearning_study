@@ -16,58 +16,56 @@ import tensorflow as tf
 
 # seed 값 설정
 seed = 3
-numpy.random.seed(seed)
+np.random.seed(seed)
 tf.random.set_seed(seed)
 
 # 데이터 입력
-train = pd.read_csv('../input/train.csv')
-test = pd.read_csv('../input/test.csv',sep=',')
-label = pd.read_csv('../input/gender_submission.csv',sep=',')
-test.insert(0,'Survived',label['Survived'])
+train = pd.read_csv('/kaggle/input/titanic/train.csv')
+test = pd.read_csv('/kaggle/input/titanic/test.csv', sep=',')
+label = pd.read_csv('/kaggle/input/titanic/gender_submission.csv', sep=',')
+test.insert(0, 'Survived', label['Survived'])
 
-    
-#데이터 삭제
-train_data=train.drop(['PassengerId', 'Name', 'Ticket', 'Cabin'],axis=1)
-test_data=test.drop(['PassengerId', 'Name', 'Ticket', 'Cabin'],axis=1)
-train_data=train_data.dropna(axis=0)
-test_data=test_data.fillna(0)
-#print(train_data.info())
-#print(test_data.info())
+# 데이터 삭제
+train_data = train.drop(['PassengerId', 'Name', 'Ticket', 'Cabin'], axis=1)
+test_data = test.drop(['PassengerId', 'Name', 'Ticket', 'Cabin'], axis=1)
+train_data = train_data.dropna(axis=0)
+test_data = test_data.fillna(0)
+# print(train_data.info())
+# print(test_data.info())
 
-#문자열을 숫자로 변환 후 원핫인코딩
+# 문자열을 숫자로 변환 후 원핫인코딩
 trian_dataset = pd.get_dummies(train_data).values
 test_dataset = pd.get_dummies(test_data).values
 
-#데이터분류
-X_train = trian_dataset[:,1:11]
-Y_train = trian_dataset[:,0]
-X_test = test_dataset[:,1:11]
-Y_test = test_dataset[:,0]
+# 데이터분류
+X_train = trian_dataset[:, 1:11]
+Y_train = trian_dataset[:, 0]
+X_test = test_dataset[:, 1:11]
+Y_test = test_dataset[:, 0]
 
-#모델생성
+# 모델생성
 model = Sequential()
 model.add(Dense(13, input_dim=10, activation='relu'))
 model.add(Dense(7, activation='relu'))
 model.add(Dense(1, activation='sigmoid'))
 
 model.compile(loss='binary_crossentropy',
-          optimizer='adam',
-          metrics=['accuracy'])
+              optimizer='adam',
+              metrics=['accuracy'])
 
-model.fit(X_train, Y_train, epochs=500, batch_size=10, verbose=1)
-
+model.fit(X_train, Y_train, epochs=500, batch_size=10)
 
 # 예측 값과 실제 값의 csv저장
 Y_prediction = model.predict(X_test).flatten()
-Y_prediction=numpy.round(Y_prediction)
-Y_prediction=map(int, Y_prediction)
+Y_prediction = np.round(Y_prediction)
+Y_prediction = map(int, Y_prediction)
 
-submission=pd.DataFrame({\
-"PassengerId":label["PassengerId"],\
-"Survived":Y_prediction\
-})
-print(submission)
-submission.to_csv('hyuneekk_submission.csv', index=False)
+submission = pd.DataFrame({ \
+    "PassengerId": label["PassengerId"], \
+    "Survived": Y_prediction \
+    })
+# print(submission)
+submission.to_csv('submission.csv', index=False)
  
 """
 # 모델 저장 폴더 설정
