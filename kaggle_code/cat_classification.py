@@ -33,9 +33,7 @@ label = pd.read_csv('/kaggle/input/cat-in-the-dat-ii/sample_submission.csv', sep
 # print(train.info())
 
 # 오브젝트 idx
-idx = ['bin_3', 'bin_4', 'nom_0', 'nom_1', 'nom_2', 'nom_3', 'nom_4', 'nom_5', 'nom_6', 'nom_7', 'nom_8', 'nom_9',
-       'ord_1', 'ord_2', 'ord_3', 'ord_4', 'ord_5']
-# idx=['bin_4','nom_1','nom_4','nom_7','nom_8','nom_9','ord_2','ord_3','ord_5']
+idx=['bin_4','nom_1','nom_4','nom_7','nom_8','nom_9','ord_2','ord_3','ord_5']
 """
 #히트맵
 colormap = plt.cm.gist_heat
@@ -57,9 +55,8 @@ train = train.fillna(method='ffill')
 test = test.fillna(method='ffill')
 
 # 데이터 삭제
-# 'bin_3','nom_0','nom_2','nom_3','nom_5','nom_6','ord_1','ord_4'
-train = train.drop(['id'], axis=1)
-test = test.drop(['id'], axis=1)
+train = train.drop(['id','bin_3','nom_0','nom_2','nom_3','nom_5','nom_6','ord_1','ord_4'], axis=1)
+test = test.drop(['id','bin_3','nom_0','nom_2','nom_3','nom_5','nom_6','ord_1','ord_4'], axis=1)
 
 # object 속성 숫자로 바꿔주기
 e = LabelEncoder()
@@ -71,18 +68,18 @@ for i in idx:
 
 # 훈련_데이터분류
 trian_dataset = train.values
-X_train = trian_dataset[:, 0:23]
-Y_train = trian_dataset[:, 23]
+X_train = trian_dataset[:, 0:15]
+Y_train = trian_dataset[:, 15]
 
 # 샘플_데이터
 test_dataset = test.values
-X_sample = test_dataset[:, 0:23]
+X_sample = test_dataset[:, 0:15]
 
 X_train, X_test, Y_train, Y_test = train_test_split(X_train, Y_train, test_size=0.3, random_state=seed)
 
 # 모델생성
 model = Sequential()
-model.add(Dense(79, input_dim=23, activation='relu'))
+model.add(Dense(79, input_dim=15, activation='relu'))
 model.add(Dense(67, activation='relu'))
 model.add(Dense(58, activation='relu'))
 model.add(Dense(49, activation='relu'))
